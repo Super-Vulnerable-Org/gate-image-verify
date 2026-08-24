@@ -1,0 +1,24 @@
+name: Build, Scan, Push
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-scan-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t my-app:${{ github.sha }} .
+
+      # EXACTLY the documented snippet — no server_url, no fail_on_policy.
+      - uses: o3security/gate-image@main
+        with:
+          api_key: ${{ secrets.O3_API_KEY }}
+          image_name: my-app:${{ github.sha }}
+          scan_types: SCA,SECRET
+
+      - name: Push image
+        run: echo "Gate passed — would docker push my-app:${{ github.sha }}"
